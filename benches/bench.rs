@@ -48,6 +48,30 @@ fn criterion_benchmark(crt: &mut Criterion) {
         })
     });
 
+    crt.bench_function("globals.fib_call_c(1,1)", |b| {
+        let lua = Lua::new();
+        let globals = lua.globals();
+        globals
+            .set(
+                "fib_call_c",
+                lua.create_function(|_, a: i32| {
+                    let result = unsafe { lib::c::fib(a) };
+                    Ok(result)
+                })
+                .unwrap(),
+            )
+            .expect("fib_call_c");
+        let fib: LuaFunction = lua
+            .load("require('lua.export').fib_call_c")
+            .eval()
+            .expect("lua load");
+
+        b.iter(|| {
+            let result = fib.call::<_, i32>(10).expect("lua run");
+            assert_eq!(55, result);
+        })
+    });
+
     crt.bench_function("c.fib(10)", |b| {
         b.iter(|| unsafe {
             let _ = lib::c::fib(10);

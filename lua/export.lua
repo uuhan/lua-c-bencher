@@ -16,4 +16,6 @@ end
 
 _M.fib = fib
 
+_M.fib_call_c = _G.fib_call_c
+
 return _M
